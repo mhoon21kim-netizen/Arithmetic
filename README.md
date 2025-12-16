@@ -120,3 +120,7 @@ pytest tests/test_arithmetic.py
 
 이 프로젝트는 내부 테스트 목적으로 사용됩니다.
 
+## RED 브랜치 추가
+RED 브랜치 추가하고 PR 요청함니다.
+
+
