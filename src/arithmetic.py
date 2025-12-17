@@ -30,68 +30,60 @@ class Arithmetic:
 
 
 if __name__ == "__main__":
-    """직접 실행 시 테스트 케이스 실행 및 예제 출력"""
-    import sys
-    import os
+    """간단한 사칙연산 콘솔 프로그램"""
     
-    # 프로젝트 루트를 경로에 추가
-    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    sys.path.insert(0, project_root)
-    
-    print("=" * 60)
-    print("Arithmetic 클래스 테스트 실행")
-    print("=" * 60)
-    print()
-    
-    # 테스트 케이스 실행
+    # 입력 화면
+    print("입력화면")
     try:
-        import pytest
-        print("pytest를 사용하여 테스트 실행 중...")
-        print()
-        exit_code = pytest.main(["-v", "tests/test_arithmetic.py"])
-        print()
-        if exit_code == 0:
-            print("=" * 60)
-            print("✅ 모든 테스트 통과!")
-            print("=" * 60)
+        num1 = int(input("첫번째 정수값 >>"))
+        operator = input("연산자>>")
+        num2 = int(input("두번째 정수값>>"))
+    except ValueError:
+        print("올바른 정수를 입력해주세요.")
+        exit(1)
+    
+    # 결과 뷰 화면
+    print()
+    print("결과 뷰 화면")
+    print("=" * 30)
+    
+    # 연산자에 따른 계산 수행
+    try:
+        if operator == "+":
+            result = Arithmetic.add(num1, num2)
+            print(f"{num1} + {num2}을 계산합니다.")
+            print("=" * 30)
+            print(f"{num1}+{num2}={result}입니다.")
+        elif operator == "-":
+            result = Arithmetic.subtract(num1, num2)
+            print(f"{num1} - {num2}을 계산합니다.")
+            print("=" * 30)
+            print(f"{num1}-{num2}={result}입니다.")
+        elif operator == "*":
+            result = Arithmetic.multiply(num1, num2)
+            print(f"{num1} * {num2}을 계산합니다.")
+            print("=" * 30)
+            print(f"{num1}*{num2}={result}입니다.")
+        elif operator == "/":
+            result = Arithmetic.divide(num1, num2)
+            print(f"{num1} / {num2}을 계산합니다.")
+            print("=" * 30)
+            print(f"{num1}/{num2}={result}입니다.")
+        elif operator == "//":
+            result = Arithmetic.divide(num1, num2)
+            print(f"{num1} // {num2}을 계산합니다.")
+            print("=" * 30)
+            print(f"{num1}//{num2}={result}입니다.")
+        elif operator == "÷" or operator == "÷":
+            result = Arithmetic.quotient(num1, num2)
+            print(f"{num1} ÷ {num2}을 계산합니다.")
+            print("=" * 30)
+            print(f"{num1}÷{num2}={result}입니다.")
         else:
-            print("=" * 60)
-            print("❌ 일부 테스트 실패")
-            print("=" * 60)
-    except ImportError:
-        print("⚠️  pytest가 설치되지 않았습니다.")
-        print("다음 명령어로 설치하세요: pip install pytest")
-        print()
-        print("대신 간단한 예제를 실행합니다:")
-        print("-" * 60)
-        
-        # pytest가 없을 경우 간단한 예제 실행
-        print("\n[덧셈 테스트]")
-        print(f"  Arithmetic.add(1, 10) = {Arithmetic.add(1, 10)}")
-        print(f"  Arithmetic.add(0, 1) = {Arithmetic.add(0, 1)}")
-        print(f"  Arithmetic.add(-1, -10) = {Arithmetic.add(-1, -10)}")
-        
-        print("\n[뺄셈 테스트]")
-        print(f"  Arithmetic.subtract(5, 2) = {Arithmetic.subtract(5, 2)}")
-        
-        print("\n[곱셈 테스트]")
-        print(f"  Arithmetic.multiply(-5, -3) = {Arithmetic.multiply(-5, -3)}")
-        print(f"  Arithmetic.multiply(0, 10) = {Arithmetic.multiply(0, 10)}")
-        
-        print("\n[나눗셈 테스트]")
-        print(f"  Arithmetic.divide(5, 2) = {Arithmetic.divide(5, 2)}")
-        print(f"  Arithmetic.divide(-10, 2) = {Arithmetic.divide(-10, 2)}")
-        print(f"  Arithmetic.quotient(5, 2) = {Arithmetic.quotient(5, 2)}")
-        
-        print("\n[예외 처리 테스트]")
-        try:
-            Arithmetic.divide(0, 0)
-            print("  ❌ 예외가 발생하지 않았습니다!")
-        except ArithmeticError as e:
-            print(f"  ✅ ArithmeticError 발생: {e}")
-        
-        print()
-        print("=" * 60)
-        print("예제 실행 완료")
-        print("=" * 60)
+            print(f"지원하지 않는 연산자입니다: {operator}")
+            print("지원하는 연산자: +, -, *, /, //, ÷")
+            exit(1)
+    except ArithmeticError as e:
+        print(f"오류가 발생했습니다: {e}")
+        exit(1)
 
