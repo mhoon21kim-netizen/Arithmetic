@@ -59,7 +59,8 @@ class CalculatorApp(QMainWindow):
         │  7  │  8  │  9  │ × │
         │  4  │  5  │  6  │ - │
         │  1  │  2  │  3  │ + │
-        │ +/- │  0  │  .  │ = │
+        │ +/- │  0  │  .  │ / │
+        │     C    │    =     │
         └─────────────────────┘
         """
         # ============================================
@@ -108,7 +109,7 @@ class CalculatorApp(QMainWindow):
         
         # 버튼 정의 (행, 열, 행span, 열span, 텍스트, 스타일)
         # - 숫자 버튼 (0-9)
-        # - 연산자 버튼 (+, -, ×, ÷, =)
+        # - 연산자 버튼 (+, -, ×, /, =)
         # - 특수 버튼 (+/-, Clear)
         buttons = [
             # 첫 번째 행: 7, 8, 9, ×
@@ -129,11 +130,11 @@ class CalculatorApp(QMainWindow):
             (2, 2, 1, 1, "3", "number"),
             (2, 3, 1, 1, "+", "operator"),
             
-            # 네 번째 행: +/-, 0, ., =
+            # 네 번째 행: +/-, 0, ., /
             (3, 0, 1, 1, "+/-", "special"),  # 특수 버튼
             (3, 1, 1, 1, "0", "number"),     # 숫자 버튼
             (3, 2, 1, 1, ".", "number"),     # 숫자 버튼 (소수점)
-            (3, 3, 1, 1, "=", "equals"),    # 연산자 버튼
+            (3, 3, 1, 1, "/", "operator"),   # 연산자 버튼 (나누기)
         ]
         
         # 버튼 생성 및 배치
@@ -143,10 +144,16 @@ class CalculatorApp(QMainWindow):
             # 이벤트 연결은 4단계에서 처리
             self.connect_button(button, text, button_type)
         
-        # Clear 버튼 추가 (특수 버튼)
+        # 다섯 번째 행: C 과 =를 반반으로 배치
+        # C 버튼 (2칸) - Clear
         clear_button = self.create_button("C", "special")
-        button_layout.addWidget(clear_button, 4, 0, 1, 4)
+        button_layout.addWidget(clear_button, 4, 0, 1, 2)
         self.connect_button(clear_button, "C", "special")
+        
+        # = 버튼 (2칸)
+        equals_button = self.create_button("=", "equals")
+        button_layout.addWidget(equals_button, 4, 2, 1, 2)
+        self.connect_button(equals_button, "=", "equals")
         
         main_layout.addLayout(button_layout)
     
