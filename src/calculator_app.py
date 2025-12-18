@@ -76,10 +76,20 @@ class ButtonConfig:
     COLOR_DISPLAY_BG = "#f5f5f5"
     COLOR_DISPLAY_BORDER = "#ccc"
     
+    # 스타일시트 상수 (추가 개선: Magic Numbers 제거)
+    BORDER_RADIUS = "5px"
+    BORDER_WIDTH_BUTTON = "1px"
+    BORDER_WIDTH_DISPLAY = "2px"
+    DISPLAY_PADDING = "10px"
+    
     # 버튼 텍스트 상수
     BUTTON_CLEAR = "C"
     BUTTON_TOGGLE_SIGN = "+/-"
     BUTTON_EQUALS = "="
+    BUTTON_DECIMAL = "."  # 우선순위 3 개선: 소수점 버튼 상수화
+    
+    # 디스플레이 초기값
+    DISPLAY_INITIAL_VALUE = "0"
 
 
 # ============================================
@@ -143,21 +153,24 @@ class ButtonLayoutConfig:
             # 네 번째 행: +/-, 0, ., /
             ButtonDefinition(3, 0, 1, 1, ButtonConfig.BUTTON_TOGGLE_SIGN, ButtonType.SPECIAL),
             ButtonDefinition(3, 1, 1, 1, "0", ButtonType.NUMBER),
-            ButtonDefinition(3, 2, 1, 1, ".", ButtonType.NUMBER),
+            ButtonDefinition(3, 2, 1, 1, ButtonConfig.BUTTON_DECIMAL, ButtonType.NUMBER),  # 우선순위 3 개선: Magic String 제거
             ButtonDefinition(3, 3, 1, 1, "/", ButtonType.OPERATOR),
         ]
     
     @staticmethod
-    def get_special_buttons() -> list[tuple[ButtonDefinition, int, int]]:
+    def get_special_buttons() -> list[ButtonDefinition]:
         """
         특수 버튼 정의 (C, =)
         
+        우선순위 2 개선: 타입 일관성을 위해 list[ButtonDefinition]로 통일
+        row, col 정보는 ButtonDefinition에 이미 포함되어 있음
+        
         Returns:
-            (ButtonDefinition, row, col) 튜플 리스트
+            ButtonDefinition 리스트
         """
         return [
-            (ButtonDefinition(4, 0, 1, 2, ButtonConfig.BUTTON_CLEAR, ButtonType.SPECIAL), 4, 0),
-            (ButtonDefinition(4, 2, 1, 2, ButtonConfig.BUTTON_EQUALS, ButtonType.EQUALS), 4, 2),
+            ButtonDefinition(4, 0, 1, 2, ButtonConfig.BUTTON_CLEAR, ButtonType.SPECIAL),
+            ButtonDefinition(4, 2, 1, 2, ButtonConfig.BUTTON_EQUALS, ButtonType.EQUALS),
         ]
 
 
@@ -247,6 +260,8 @@ class ButtonStyleManager:
     SOLID 원칙:
     - SRP: 스타일 관리만 담당
     - OCP: 딕셔너리 기반으로 새 스타일 추가 용이
+    
+    추가 개선: 템플릿 메서드 패턴 적용으로 중복 코드 제거
     """
     
     @staticmethod
@@ -269,73 +284,83 @@ class ButtonStyleManager:
         return styles.get(button_type, "")
     
     @staticmethod
-    def _number_style() -> str:
-        """숫자 버튼 스타일"""
+    def _create_style(
+        bg_color: str,
+        hover_color: str,
+        pressed_color: str,
+        border_color: str = None,
+        text_color: str = None
+    ) -> str:
+        """
+        스타일시트 템플릿 메서드 (추가 개선: 템플릿 메서드 패턴)
+        
+        중복된 스타일시트 코드를 제거하고 공통 템플릿을 사용
+        
+        Args:
+            bg_color: 배경색
+            hover_color: 호버 시 배경색
+            pressed_color: 클릭 시 배경색
+            border_color: 테두리 색상 (기본값: COLOR_DISPLAY_BORDER)
+            text_color: 텍스트 색상 (기본값: None, 기본 텍스트 색상 사용)
+        
+        Returns:
+            스타일시트 문자열
+        """
+        border = border_color or ButtonConfig.COLOR_DISPLAY_BORDER
+        color_style = f"color: {text_color};" if text_color else ""
+        
         return f"""
             QPushButton {{
-                background-color: {ButtonConfig.COLOR_NUMBER_BG};
-                border: 1px solid {ButtonConfig.COLOR_DISPLAY_BORDER};
-                border-radius: 5px;
+                background-color: {bg_color};
+                border: {ButtonConfig.BORDER_WIDTH_BUTTON} solid {border};
+                border-radius: {ButtonConfig.BORDER_RADIUS};
+                {color_style}
             }}
             QPushButton:hover {{
-                background-color: {ButtonConfig.COLOR_NUMBER_HOVER};
+                background-color: {hover_color};
             }}
             QPushButton:pressed {{
-                background-color: {ButtonConfig.COLOR_NUMBER_PRESSED};
+                background-color: {pressed_color};
             }}
         """
+    
+    @staticmethod
+    def _number_style() -> str:
+        """숫자 버튼 스타일"""
+        return ButtonStyleManager._create_style(
+            ButtonConfig.COLOR_NUMBER_BG,
+            ButtonConfig.COLOR_NUMBER_HOVER,
+            ButtonConfig.COLOR_NUMBER_PRESSED
+        )
     
     @staticmethod
     def _operator_style() -> str:
         """연산자 버튼 스타일"""
-        return f"""
-            QPushButton {{
-                background-color: {ButtonConfig.COLOR_OPERATOR_BG};
-                border: 1px solid {ButtonConfig.COLOR_DISPLAY_BORDER};
-                border-radius: 5px;
-            }}
-            QPushButton:hover {{
-                background-color: {ButtonConfig.COLOR_OPERATOR_HOVER};
-            }}
-            QPushButton:pressed {{
-                background-color: {ButtonConfig.COLOR_OPERATOR_PRESSED};
-            }}
-        """
+        return ButtonStyleManager._create_style(
+            ButtonConfig.COLOR_OPERATOR_BG,
+            ButtonConfig.COLOR_OPERATOR_HOVER,
+            ButtonConfig.COLOR_OPERATOR_PRESSED
+        )
     
     @staticmethod
     def _equals_style() -> str:
         """등호 버튼 스타일"""
-        return f"""
-            QPushButton {{
-                background-color: {ButtonConfig.COLOR_EQUALS_BG};
-                color: {ButtonConfig.COLOR_EQUALS_TEXT};
-                border: 1px solid {ButtonConfig.COLOR_EQUALS_HOVER};
-                border-radius: 5px;
-            }}
-            QPushButton:hover {{
-                background-color: {ButtonConfig.COLOR_EQUALS_HOVER};
-            }}
-            QPushButton:pressed {{
-                background-color: {ButtonConfig.COLOR_EQUALS_PRESSED};
-            }}
-        """
+        return ButtonStyleManager._create_style(
+            ButtonConfig.COLOR_EQUALS_BG,
+            ButtonConfig.COLOR_EQUALS_HOVER,
+            ButtonConfig.COLOR_EQUALS_PRESSED,
+            border_color=ButtonConfig.COLOR_EQUALS_HOVER,
+            text_color=ButtonConfig.COLOR_EQUALS_TEXT
+        )
     
     @staticmethod
     def _special_style() -> str:
         """특수 버튼 스타일"""
-        return f"""
-            QPushButton {{
-                background-color: {ButtonConfig.COLOR_SPECIAL_BG};
-                border: 1px solid {ButtonConfig.COLOR_DISPLAY_BORDER};
-                border-radius: 5px;
-            }}
-            QPushButton:hover {{
-                background-color: {ButtonConfig.COLOR_SPECIAL_HOVER};
-            }}
-            QPushButton:pressed {{
-                background-color: {ButtonConfig.COLOR_SPECIAL_PRESSED};
-            }}
-        """
+        return ButtonStyleManager._create_style(
+            ButtonConfig.COLOR_SPECIAL_BG,
+            ButtonConfig.COLOR_SPECIAL_HOVER,
+            ButtonConfig.COLOR_SPECIAL_PRESSED
+        )
 
 
 # ============================================
@@ -458,14 +483,14 @@ class CalculatorApp(QMainWindow):
         self.display.setReadOnly(True)  # 읽기 전용
         self.display.setAlignment(Qt.AlignmentFlag.AlignRight)  # 우측 정렬
         self.display.setFont(QFont(ButtonConfig.FONT_FAMILY, ButtonConfig.FONT_SIZE_DISPLAY))
-        self.display.setText("0")
+        self.display.setText(ButtonConfig.DISPLAY_INITIAL_VALUE)
         
-        # 스타일링
+        # 스타일링 (추가 개선: Magic Numbers 제거)
         self.display.setStyleSheet(f"""
             QLineEdit {{
-                border: 2px solid {ButtonConfig.COLOR_DISPLAY_BORDER};
-                border-radius: 5px;
-                padding: 10px;
+                border: {ButtonConfig.BORDER_WIDTH_DISPLAY} solid {ButtonConfig.COLOR_DISPLAY_BORDER};
+                border-radius: {ButtonConfig.BORDER_RADIUS};
+                padding: {ButtonConfig.DISPLAY_PADDING};
                 background-color: {ButtonConfig.COLOR_DISPLAY_BG};
             }}
         """)
@@ -479,25 +504,24 @@ class CalculatorApp(QMainWindow):
         - 숫자 버튼 (0-9)
         - 연산자 버튼 (+, -, ×, /, =)
         - 특수 버튼 (+/-, Clear)
+        
+        우선순위 2 개선: 일반 버튼과 특수 버튼을 동일한 방식으로 처리하여 코드 중복 제거
         """
         # QGridLayout 사용
         button_layout = QGridLayout()
         button_layout.setSpacing(ButtonConfig.LAYOUT_SPACING)
         
-        # 버튼 정의 가져오기 (ButtonLayoutConfig 사용)
-        button_definitions = ButtonLayoutConfig.get_button_definitions()
+        # 모든 버튼 정의 가져오기 (일반 버튼 + 특수 버튼)
+        all_button_definitions = (
+            ButtonLayoutConfig.get_button_definitions() + 
+            ButtonLayoutConfig.get_special_buttons()
+        )
         
         # 버튼 생성 및 배치 (ButtonFactory 사용)
-        for btn_def in button_definitions:
+        # 우선순위 2 개선: 일반 버튼과 특수 버튼을 동일한 방식으로 처리
+        for btn_def in all_button_definitions:
             button = ButtonFactory.create_button(btn_def.text, btn_def.button_type)
             button_layout.addWidget(button, btn_def.row, btn_def.col, btn_def.rowspan, btn_def.colspan)
-            self.connect_button(button, btn_def.text, btn_def.button_type)
-        
-        # 특수 버튼 배치 (C, =)
-        special_buttons = ButtonLayoutConfig.get_special_buttons()
-        for btn_def, row, col in special_buttons:
-            button = ButtonFactory.create_button(btn_def.text, btn_def.button_type)
-            button_layout.addWidget(button, row, col, btn_def.rowspan, btn_def.colspan)
             self.connect_button(button, btn_def.text, btn_def.button_type)
         
         self.main_layout.addLayout(button_layout)
@@ -515,23 +539,35 @@ class CalculatorApp(QMainWindow):
         CalculatorEngine.input_number() / input_operator() → 
         CalculatorEngine.calculate() (연산자 클릭 시) → 디스플레이 업데이트
         
+        우선순위 4 개선: 딕셔너리 매핑을 사용하여 조건문 단순화
+        - 순환 복잡도 감소
+        - OCP 준수 (새 버튼 타입 추가 시 확장 용이)
+        
         Args:
             button: 연결할 버튼
             text: 버튼 텍스트
             button_type: 버튼 타입 (ButtonType Enum)
         """
-        # 사용자 클릭 이벤트를 핸들러 메서드에 연결
-        if button_type == ButtonType.NUMBER:
-            button.clicked.connect(lambda: self.on_number_clicked(text))
-        elif button_type == ButtonType.OPERATOR:
-            button.clicked.connect(lambda: self.on_operator_clicked(text))
-        elif button_type == ButtonType.EQUALS:
-            button.clicked.connect(self.on_equals_clicked)
-        else:  # ButtonType.SPECIAL
-            if text == ButtonConfig.BUTTON_CLEAR:
-                button.clicked.connect(self.on_clear_clicked)
-            elif text == ButtonConfig.BUTTON_TOGGLE_SIGN:
-                button.clicked.connect(self.on_toggle_sign_clicked)
+        # 우선순위 4 개선: 버튼 타입별 핸들러 매핑 (딕셔너리 전략 패턴)
+        handler_map = {
+            ButtonType.NUMBER: lambda: self.on_number_clicked(text),
+            ButtonType.OPERATOR: lambda: self.on_operator_clicked(text),
+            ButtonType.EQUALS: self.on_equals_clicked,
+        }
+        
+        # 특수 버튼 텍스트별 핸들러 매핑
+        special_handler_map = {
+            ButtonConfig.BUTTON_CLEAR: self.on_clear_clicked,
+            ButtonConfig.BUTTON_TOGGLE_SIGN: self.on_toggle_sign_clicked,
+        }
+        
+        # 핸들러 연결
+        if button_type in handler_map:
+            # 일반 버튼 타입 (NUMBER, OPERATOR, EQUALS)
+            button.clicked.connect(handler_map[button_type])
+        elif button_type == ButtonType.SPECIAL and text in special_handler_map:
+            # 특수 버튼 타입 (C, +/-)
+            button.clicked.connect(special_handler_map[text])
     
     # ============================================
     # 이벤트 핸들러 통합 (우선순위 2 - 단계 3)
@@ -566,7 +602,7 @@ class CalculatorApp(QMainWindow):
         
         에러 발생 시 계산기 상태를 초기화하는 공통 로직
         """
-        self.display.setText("0")
+        self.display.setText(ButtonConfig.DISPLAY_INITIAL_VALUE)
         self.engine.clear()
     
     def on_number_clicked(self, number: str):
@@ -638,11 +674,13 @@ class CalculatorApp(QMainWindow):
         README.md 4.2 구현 단계 - 4. 이벤트 연결:
         버튼 클릭 → CalculatorEngine.clear() 메서드 호출
         결과 → 디스플레이 업데이트
+        
+        우선순위 1 개선: 일관된 에러 처리를 위해 _handle_calculation() 사용
         """
-        # CalculatorEngine 메서드 호출
-        display = self.engine.clear()
-        # 결과 → 디스플레이 업데이트
-        self.display.setText(display)
+        self._handle_calculation(
+            lambda: self.engine.clear(),
+            "초기화 오류"
+        )
     
     def on_toggle_sign_clicked(self):
         """
@@ -651,11 +689,13 @@ class CalculatorApp(QMainWindow):
         README.md 4.2 구현 단계 - 4. 이벤트 연결:
         버튼 클릭 → CalculatorEngine.toggle_sign() 메서드 호출
         결과 → 디스플레이 업데이트
+        
+        우선순위 1 개선: 일관된 에러 처리를 위해 _handle_calculation() 사용
         """
-        # CalculatorEngine 메서드 호출
-        display = self.engine.toggle_sign()
-        # 결과 → 디스플레이 업데이트
-        self.display.setText(display)
+        self._handle_calculation(
+            lambda: self.engine.toggle_sign(),
+            "부호 변경 오류"
+        )
     
     def _show_error_dialog(self, title: str, message: str):
         """
