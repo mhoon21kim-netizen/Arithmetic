@@ -43,6 +43,11 @@ class CalculatorEngine:
         """
         숫자 입력 처리
         
+        README.md 4.3 이벤트 처리 흐름:
+        on_number_clicked() → input_number() (현재 메서드)
+            ↓
+        디스플레이 업데이트
+        
         Args:
             number: 입력된 숫자 문자열 (0-9, '.')
         
@@ -68,6 +73,13 @@ class CalculatorEngine:
         """
         연산자 입력 처리
         
+        README.md 4.3 이벤트 처리 흐름:
+        on_operator_clicked() → input_operator() (현재 메서드)
+            ↓
+        calculate() (연산자 클릭 시, 연속 연산인 경우)
+            ↓
+        디스플레이 업데이트
+        
         Args:
             operator: 연산자 문자열 (+, -, *, ×, /, ÷)
         
@@ -84,9 +96,11 @@ class CalculatorEngine:
             self.current_value = input_value
         else:
             # 연속 연산 수행 (이전 연산자로 계산)
+            # README.md 4.3: CalculatorEngine.calculate() (연산자 클릭 시)
             if not self.waiting_for_operand:
                 # 새로운 숫자가 입력된 경우에만 계산
                 try:
+                    # 연속 연산 시 이전 연산 수행 (calculate() 역할)
                     self.current_value = self._calculate(
                         self.pending_operation,
                         self.current_value,
@@ -106,6 +120,11 @@ class CalculatorEngine:
     def calculate(self) -> str:
         """
         계산 수행 (= 버튼 클릭 시)
+        
+        README.md 4.3 이벤트 처리 흐름:
+        on_equals_clicked() → calculate() (현재 메서드)
+            ↓
+        디스플레이 업데이트
         
         Returns:
             계산 결과 디스플레이 문자열
